@@ -1,0 +1,34 @@
+# created-by: streamlit-in-workspaces; skill-version=1.0.0
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    query_warehouse: WH_APPS
+    compute_pool: APPS_COMPUTE_POOL
+    main_file: streamlit_app.py
+    external_access_integrations:
+      - PYPI_ACCESS_INTEGRATION
+    artifacts:
+      - pyproject.toml
+      - streamlit_app.py
+      - config.py
+      - .streamlit/config.toml
+      - services/snowflake_connection.py
+      - services/pdf_generator.py
+      - services/cortex_agent.py
+      - ui/components.py
+      - ui/settings_page.py
+      - ui/chart_renderer.py
+      - visualization/__init__.py
+      - visualization/chart_generator.py
+      - assets/just_born_logo.png
+    identifier:
+      database: JBEDW_DEV
+      schema: APPS
+      name: app-convesrational-analytics
+    title: app-convesrational-analytics
+    run_mode: SpcsOnly
+    execute_as: OWNER
+    sharing:
+      - role: FR_DATA_ENGINEER
+        with_grant_option: true
