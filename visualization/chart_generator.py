@@ -1,10 +1,10 @@
 """Chart Generator Orchestrator Module.
 
 Coordinates:
-1. DataFrame metadata extraction and prompt construction (`chart_prompt.py`).
+1. DataFrame metadata extraction and prompt construction.
 2. Calling Cortex AI / LLM for dynamic code generation.
-3. AST security validation (`chart_validator.py`).
-4. Controlled execution in restricted namespace (`chart_executor.py`).
+3. AST security validation.
+4. Controlled execution in restricted namespace.
 5. Fallback & error logging.
 """
 
@@ -18,6 +18,9 @@ from .chart_prompt import build_visualization_prompt, extract_df_metadata
 from .chart_validator import validate_python_code
 from .chart_executor import execute_chart_code
 from services.cortex_ai import CortexAIService
+from config import BRAND_COLORS
+
+_PRIMARY_COLOR = BRAND_COLORS["primary"]
 
 logger = logging.getLogger("dynamic_chart_generator")
 
@@ -219,9 +222,9 @@ fig = px.bar(
     y="{val_col}",
     title="{question.title()}",
     text_auto=".1f",
-    color_discrete_sequence=["#242B6B"]
+    color_discrete_sequence=[{_PRIMARY_COLOR}]
 )
-fig.update_traces(marker_color="#242B6B", textfont_color="white")
+fig.update_traces(marker_color={_PRIMARY_COLOR}, textfont_color="white")
 """
         return {
             "should_visualize": True,
@@ -308,9 +311,9 @@ fig = px.bar(
     y="{val_col}",
     title="{question.title()}",
     text_auto=".1f",
-    color_discrete_sequence=["#242B6B"]
+    color_discrete_sequence=[{_PRIMARY_COLOR}]
 )
-fig.update_traces(marker_color="#242B6B", textfont_color="white")
+fig.update_traces(marker_color={_PRIMARY_COLOR}, textfont_color="white")
 """
     return {
         "should_visualize": True,

@@ -1,4 +1,4 @@
-"""Settings UI Component for Manufacturing OEE Application."""
+"""Settings UI Component for the Conversational Analytics Application."""
 
 import streamlit as st
 import pandas as pd
@@ -59,10 +59,10 @@ def render_settings_page():
         db_res = load_app_settings_from_db()
         db_sets = db_res.get("settings", {})
 
-        st.session_state.settings_header_title = db_sets.get("header_title") or "OEE AI Assistant"
-        st.session_state.settings_header_subtitle = db_sets.get("header_subtitle") or "Ask natural language questions about plant performance, equipment availability, line productivity, and downtime root causes — powered by Cortex Analyst."
+        st.session_state.settings_header_title = db_sets.get("header_title") or "AI Assistant"
+        st.session_state.settings_header_subtitle = db_sets.get("header_subtitle") or "Ask natural language questions about your data — powered by Cortex Analyst."
         
-        st.session_state.settings_history_count = int(db_sets.get("history_count") )
+        st.session_state.settings_history_count = int(db_sets.get("history_count") or 10)
 
         if db_res.get("logo_bytes") is not None:
             st.session_state.settings_custom_logo_bytes = db_res["logo_bytes"]

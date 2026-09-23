@@ -1,14 +1,13 @@
-"""Manufacturing OEE Conversational Analytics Application in Streamlit.
+"""Conversational Analytics Application in Streamlit.
 
 Integrates:
 - Chat Interface & Settings Page
 - Sidebar Filters & Settings Controls
 - KPI Cards
 - Cortex Analyst (NLU & Structured Data Querying)
-- Dynamic Visualization Engine (LLM Code Gen -> AST Security Validation -> Restricted Execution -> Plotly Figure)
+- Dynamic Visualization Engine
 - Metric Color Highlighting for Data Tables
 - PDF Export of Conversation with Company Logo & Download Timestamp
-- Developer / Debug Mode
 """
 
 import base64
@@ -21,7 +20,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from config import APP_TITLE, APP_ICON, DB, ANALYTICS_SCHEMA
+from config import APP_TITLE, APP_ICON, DB, ANALYTICS_SCHEMA, BRAND_COLORS, CHART_CATEGORY_COLORS
 from services.cortex_agent import call_agent, collect_response, tool_results_to_df, render_chart, split_suggestions, deduplicate_paragraphs, format_oee_markdown
 from services.snowflake_connection import get_snowflake_session
 from services.pdf_generator import generate_conversation_pdf
@@ -33,28 +32,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("oee_streamlit_app")
 
 # --------------------------------------------------------------------------
-# Brand palette
+# Brand palette (sourced from config.py — change once, applies everywhere)
 # --------------------------------------------------------------------------
 BRAND = {
-    "navy": "#242B6B",
-    "navy_light": "#3B4394",
-    "navy_deep": "#171C4A",
-    "coral": "#E15241",
-    "magenta": "#A63A96",
-    "gold": "#E0A438",
-    "bg_top": "#F3F5FC",
-    "bg_bottom": "#FFFFFF",
-    "panel": "#F6F7FD",
-    "card": "#FFFFFF",
-    "card_soft": "#FBFBFE",
-    "border": "#E4E7F3",
-    "text": "#1E2233",
-    "muted": "#6C7290",
-    "shadow": "31, 41, 107",
+    "navy":       BRAND_COLORS["primary"],
+    "navy_light": BRAND_COLORS["primary_light"],
+    "navy_deep":  BRAND_COLORS["primary_deep"],
+    "coral":      BRAND_COLORS["danger"],
+    "magenta":    BRAND_COLORS["accent_cool"],
+    "gold":       BRAND_COLORS["accent_warm"],
+    "bg_top":     BRAND_COLORS["bg_top"],
+    "bg_bottom":  BRAND_COLORS["bg_bottom"],
+    "panel":      BRAND_COLORS["panel"],
+    "card":       BRAND_COLORS["card"],
+    "card_soft":  BRAND_COLORS["card_soft"],
+    "border":     BRAND_COLORS["border"],
+    "text":       BRAND_COLORS["text"],
+    "muted":      BRAND_COLORS["muted"],
+    "shadow":     BRAND_COLORS["shadow_rgb"],
 }
 
 ASSETS_DIR = Path(__file__).parent / "assets"
-LOGO_PATH = ASSETS_DIR / "just_born_logo.png"
+LOGO_PATH = ASSETS_DIR / "ArisData logo.png"
 
 
 @st.cache_data(show_spinner=False)
@@ -89,14 +88,14 @@ if "db_settings_loaded" not in st.session_state:
     db_res = load_app_settings_from_db()
     db_sets = db_res.get("settings", {})
 
-    st.session_state.settings_header_title = db_sets.get("header_title") or "OEE AI Assistant"
-    st.session_state.settings_header_subtitle = db_sets.get("header_subtitle") or "Ask natural language questions about plant performance, equipment availability, line productivity, and downtime root causes"
-    st.session_state.settings_pdf_filename_template = db_sets.get("pdf_filename_template") or "OEE_Conversation_Report_{YYYYMMDD}.pdf"
+    st.session_state.settings_header_title = db_sets.get("header_title") or "AI Assistant"
+    st.session_state.settings_header_subtitle = db_sets.get("header_subtitle") or "Ask natural language questions about your data — powered by Cortex Analyst."
+    st.session_state.settings_pdf_filename_template = db_sets.get("pdf_filename_template") or "Conversation_Report_{YYYYMMDD}.pdf"
     st.session_state.settings_semantic_view = db_sets.get("semantic_view") 
     st.session_state.settings_warehouse_name = db_sets.get("warehouse_name") 
     st.session_state.settings_analyst_tool_name = db_sets.get("analyst_tool_name") 
     st.session_state.settings_orchestration_model = db_sets.get("orchestration_model") 
-    st.session_state.settings_history_count = int(db_sets.get("history_count") )
+    st.session_state.settings_history_count = int(db_sets.get("history_count") or 10)
 
     if db_res.get("logo_bytes") is not None:
         st.session_state.settings_custom_logo_bytes = db_res["logo_bytes"]
@@ -124,8 +123,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "display": "Hello! I am your **Manufacturing OEE Conversational Assistant**. Ask me anything about OEE, availability, performance, downtime reasons, or production volume across your plants and lines!",
-            "content": [{"type": "text", "text": "Hello! I am your Manufacturing OEE Conversational Assistant. Ask me anything about OEE, availability, performance, downtime reasons, or production volume across your plants and lines!"}]
+            "display": "Hello! I am your **Conversational Analytics Assistant**. Ask me anything about your data — I can query, visualize, and summarize insights for you!",
+            "content": [{"type": "text", "text": "Hello! I am your Conversational Analytics Assistant. Ask me anything about your data — I can query, visualize, and summarize insights for you!"}]
         }
     ]
 
@@ -209,7 +208,7 @@ st.markdown(f"""
         padding: 22px 28px;
         margin-bottom: 22px;
         border-radius: 18px;
-        background: linear-gradient(120deg, #FFFFFF 0%, #F5F1FA 55%, #FDF3EE 100%);
+        background: linear-gradient(120deg, #FFFFFF 0%, #EDF4F8 55%, #F4F7FA 100%);
         box-shadow: 0 14px 34px -12px rgba({BRAND['shadow']}, 0.22),
                     0 2px 8px rgba({BRAND['shadow']}, 0.06);
         position: relative;
@@ -220,7 +219,7 @@ st.markdown(f"""
         position: absolute;
         top: -60%; right: -8%;
         width: 260px; height: 260px;
-        background: radial-gradient(circle, rgba(224,164,56,0.16) 0%, rgba(224,164,56,0) 70%);
+        background: radial-gradient(circle, rgba(0,176,240,0.12) 0%, rgba(0,176,240,0) 70%);
         pointer-events: none;
     }}
     .hero-banner::after {{
@@ -228,7 +227,7 @@ st.markdown(f"""
         position: absolute;
         bottom: -70%; left: 30%;
         width: 220px; height: 220px;
-        background: radial-gradient(circle, rgba(166,58,150,0.10) 0%, rgba(166,58,150,0) 70%);
+        background: radial-gradient(circle, rgba(21,96,130,0.08) 0%, rgba(21,96,130,0) 70%);
         pointer-events: none;
     }}
     .hero-logo svg {{
@@ -502,7 +501,8 @@ snowflake_session = get_snowflake_session()
 def load_dataset():
     if snowflake_session is not None:
         try:
-            return snowflake_session.sql("SELECT * FROM OEE_TELEMETRY").to_pandas()
+            # TODO: Replace with your data table or remove if not needed
+            return snowflake_session.sql(f"SELECT * FROM {DB}.{ANALYTICS_SCHEMA}.APP_DATA").to_pandas()
         except Exception as query_err:
             logger.error(f"Snowflake table query failed: {query_err}")
             return pd.DataFrame()
@@ -567,7 +567,7 @@ GAUGE_ICON_SVG = f"""
         </linearGradient>
         <linearGradient id="gaugeGold" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="{BRAND['gold']}"/>
-            <stop offset="100%" stop-color="#F0C25E"/>
+            <stop offset="100%" stop-color="#FFB347"/>
         </linearGradient>
         <linearGradient id="gaugeNavy" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="{BRAND['navy_light']}"/>
@@ -624,19 +624,20 @@ else:
     # Filter Dataset
     df_filtered = analyst_service._apply_filters(df_raw, filters) if not df_raw.empty else df_raw
 
-    # KPI Cards loaded from view VW_OEE_KPI_CARDS
+    # KPI Cards loaded from a view — TODO: update the view name to match your schema
     st.markdown('<div class="section-label">📊 Performance Overview</div>', unsafe_allow_html=True)
 
     def load_kpi_view_data():
         if snowflake_session is not None:
             try:
-                view_name = f"{DB}.{ANALYTICS_SCHEMA}.VW_OEE_KPI_CARDS"
+                # TODO: Update this view name to match your KPI data view
+                view_name = f"{DB}.{ANALYTICS_SCHEMA}.VW_KPI_CARDS"
                 kpi_df = snowflake_session.sql(f"SELECT * FROM {view_name}").to_pandas()
                 if not kpi_df.empty:
                     row = kpi_df.iloc[0].to_dict()
                     return {k.lower(): v for k, v in row.items()}
             except Exception as e_kpi:
-                logger.warning(f"Unable to query view {DB}.{ANALYTICS_SCHEMA}.VW_OEE_KPI_CARDS: {e_kpi}")
+                logger.warning(f"Unable to query KPI view {view_name}: {e_kpi}")
 
         # Fallback if view query fails
         today_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -668,7 +669,7 @@ else:
         st.session_state.pending_question = q_text
 
     # Check chat input or pending question from button click
-    user_input = st.chat_input("Ask an OEE question (e.g. 'Show OEE trend by plant over time')")
+    user_input = st.chat_input("Ask a question about your data...")
     prompt = user_input or st.session_state.pending_question
 
     if prompt:
@@ -706,7 +707,7 @@ else:
         )
 
     ASSISTANT_AVATAR = "🤖"
-    USER_AVATAR = "🧑‍🏭"
+    USER_AVATAR = "👤"
 
     # Render Chat History
     assistant_indices = [i for i, m in enumerate(st.session_state.messages) if m["role"] == "assistant"]
@@ -908,7 +909,7 @@ with st.sidebar:
         f"""
         <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid {BRAND['border']};
                     font-size: 0.75rem; color: {BRAND['muted']}; text-align:center;">
-            Manufacturing Analytics Assistant<br/>
+            Analytics Assistant<br/>
         </div>
         """,
         unsafe_allow_html=True,

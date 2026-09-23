@@ -3,7 +3,7 @@ definition_version: 2
 entities:
   streamlit_app:
     type: streamlit
-    query_warehouse: WH_APPS
+    query_warehouse: SIRA_WH_AI
     compute_pool: APPS_COMPUTE_POOL
     main_file: streamlit_app.py
     external_access_integrations:
@@ -21,14 +21,14 @@ entities:
       - ui/chart_renderer.py
       - visualization/__init__.py
       - visualization/chart_generator.py
-      - assets/just_born_logo.png
+      - assets/ArisData logo.png
     identifier:
-      database: JBEDW_DEV
+      database: ARISDATA_CONVERSATIONAL_ANALYTICS
       schema: APPS
-      name: app-convesrational-analytics
-    title: app-convesrational-analytics
+      name: app-conversational-analytics
+    title: app-conversational-analytics
     run_mode: SpcsOnly
     execute_as: OWNER
     sharing:
-      - role: FR_DATA_ENGINEER
+      - role: SIRA_AI_APPS_ADMIN
         with_grant_option: true

@@ -4,10 +4,10 @@
 # If a package repository server is not reachable and the pyproject.toml file has not been modified, the app will fall back to the default version of the Streamlit library.
 
 [project]
-name = "analyst-app"
+name = "conversational-analytics-app"
 requires-python = ">= 3.11"
 version = "0.0.1"
-description = "Manufacturing OEE Conversational Analytics"
+description = "Conversational Analytics Application powered by Snowflake Cortex Agent"
 dependencies = [
     "streamlit[snowflake]==1.50.0",
     "plotly>=5.18.0",
