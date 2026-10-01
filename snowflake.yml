@@ -32,3 +32,5 @@ entities:
     sharing:
       - role: SIRA_AI_APPS_ADMIN
         with_grant_option: true
+      - role: ACCOUNTADMIN
+        with_grant_option: false
