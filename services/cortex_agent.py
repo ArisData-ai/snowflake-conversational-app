@@ -389,11 +389,15 @@ def call_agent(messages: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None
         }
         return
 
+    # Cortex Search service for RAG over manufacturing documents
+    search_service_name = f"{DB}.{ANALYTICS_SCHEMA}.MANUFACTURING_KNOWLEDGE_SEARCH"
+
     payload = {
         "models": {"orchestration": orchestration_model},
         "messages": formatted_api_messages,
         "tools": [
             {"tool_spec": {"type": "cortex_analyst_text_to_sql", "name": analyst_tool_name}},
+            {"tool_spec": {"type": "cortex_search", "name": "knowledge_search"}},
             {"tool_spec": {"type": "sql_exec", "name": "sql_exec"}},
             {"tool_spec": {"type": "data_to_chart", "name": "data_to_chart"}},
         ],
@@ -404,6 +408,10 @@ def call_agent(messages: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None
                     "type": "warehouse",
                     "warehouse": warehouse_name
                 }
+            },
+            "knowledge_search": {
+                "name": search_service_name,
+                "max_results": 5
             }
         },
     }
