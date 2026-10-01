@@ -630,16 +630,26 @@ else:
     def load_kpi_view_data():
         if snowflake_session is not None:
             try:
-                # TODO: Update this view name to match your KPI data view
                 view_name = f"{DB}.{ANALYTICS_SCHEMA}.VW_KPI_CARDS"
                 kpi_df = snowflake_session.sql(f"SELECT * FROM {view_name}").to_pandas()
                 if not kpi_df.empty:
-                    row = kpi_df.iloc[0].to_dict()
                     import math
-                    return {k.lower(): (0.0 if isinstance(v, float) and math.isnan(v) else v)
-                            for k, v in row.items()}
+                    row = kpi_df.iloc[0].to_dict()
+                    clean = {}
+                    for k, v in row.items():
+                        key = k.lower()
+                        if v is None:
+                            clean[key] = 0.0
+                        else:
+                            try:
+                                f = float(v)
+                                clean[key] = 0.0 if math.isnan(f) or math.isinf(f) else f
+                            except (TypeError, ValueError):
+                                clean[key] = v
+                    return clean
             except Exception as e_kpi:
-                logger.warning(f"Unable to query KPI view {view_name}: {e_kpi}")
+                logger.warning(f"Unable to query KPI view: {e_kpi}")
+                st.toast(f"⚠️ KPI view query failed: {e_kpi}", icon="⚠️")
 
         # Fallback if view query fails
         today_str = datetime.datetime.now().strftime("%Y-%m-%d")
