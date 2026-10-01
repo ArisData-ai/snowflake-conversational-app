@@ -191,7 +191,8 @@ def _build_header_html(label: str, is_list: bool, is_explicit: bool) -> Optional
     if not icon:
         return None
     safe_label = _smart_title(label).replace("&", "&amp;")
-    return f'<div class="oee-section-header"><span class="icon">{icon}</span>{safe_label}</div>'
+    safe_icon = "".join(f"&#{ord(c)};" for c in icon)
+    return f'<div class="oee-section-header"><span class="icon">{safe_icon}</span>{safe_label}</div>'
 
 
 def _add_leadin_icon(line: str) -> str:
@@ -203,7 +204,8 @@ def _add_leadin_icon(line: str) -> str:
     icon = _keyword_icon(m.group("label"))
     if not icon:
         return line
-    return f"{m.group('indent')}{icon} {line[len(m.group('indent')):]}"
+    safe_icon = "".join(f"&#{ord(c)};" for c in icon)
+    return f"{m.group('indent')}{safe_icon} {line[len(m.group('indent')):]}"
 
 
 # Any single "X%" or range "X-Y%" / "X% to Y%" value.

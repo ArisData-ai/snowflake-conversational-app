@@ -635,7 +635,9 @@ else:
                 kpi_df = snowflake_session.sql(f"SELECT * FROM {view_name}").to_pandas()
                 if not kpi_df.empty:
                     row = kpi_df.iloc[0].to_dict()
-                    return {k.lower(): v for k, v in row.items()}
+                    import math
+                    return {k.lower(): (0.0 if isinstance(v, float) and math.isnan(v) else v)
+                            for k, v in row.items()}
             except Exception as e_kpi:
                 logger.warning(f"Unable to query KPI view {view_name}: {e_kpi}")
 

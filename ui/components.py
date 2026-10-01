@@ -131,11 +131,15 @@ def _fmt_date(val: Any) -> str:
 
 def _num(kpi_data: Dict[str, Any], *keys: str) -> float:
     """First non-null numeric value among the given keys, else 0.0."""
+    import math
     for k in keys:
         v = kpi_data.get(k)
         if v is not None and v != "":
             try:
-                return float(v)
+                f = float(v)
+                if math.isnan(f):
+                    continue
+                return f
             except (TypeError, ValueError):
                 continue
     return 0.0
@@ -143,6 +147,9 @@ def _num(kpi_data: Dict[str, Any], *keys: str) -> float:
 
 def _delta_html(diff: float, higher_is_better: bool, suffix: str) -> str:
     """Delta chip: direction arrow, magnitude, and tone based on what 'good' means."""
+    import math
+    if diff is None or math.isnan(diff):
+        return '<span class="kpi-delta flat">n/a</span>'
     if abs(diff) < 0.05:
         return '<span class="kpi-delta flat">no change</span>'
 
